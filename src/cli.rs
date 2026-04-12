@@ -1,0 +1,92 @@
+use clap::{Args, Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(
+    name = "neocom",
+    version,
+    about = "EVE Online CLI toolkit. Market prices, route safety, pilot intel, and more."
+)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Subcommand)]
+pub enum Command {
+    /// Fetch route and show danger rating per hop
+    Travel(TravelArgs),
+    /// Fetch market prices for items
+    Price(PriceArgs),
+    /// Pilot intel and kill history
+    Intel(IntelArgs),
+    /// System overview
+    System(SystemArgs),
+    /// Wormhole sites for a class
+    Wh(WhArgs),
+    /// EVE server status
+    Status,
+}
+
+#[derive(Args)]
+pub struct TravelArgs {
+    pub origin: String,
+    pub destination: String,
+    #[arg(long, default_value = "24")]
+    pub hours: u32,
+    #[arg(long, default_value = "shortest")]
+    pub route: RouteFlag,
+}
+
+#[derive(Args)]
+pub struct PriceArgs {
+    pub item: Option<String>,
+    pub quantity: Option<u32>,
+    #[arg(long, short)]
+    pub file: Option<String>,
+    #[arg(long)]
+    pub buy: bool,
+    #[arg(long)]
+    pub sell: bool,
+    #[arg(long, default_value = "10000002")]
+    pub region: String,
+}
+
+#[derive(Args)]
+pub struct IntelArgs {
+    pub pilot: String,
+    #[arg(long, default_value = "30")]
+    pub days: u32,
+}
+
+#[derive(Args)]
+pub struct SystemArgs {
+    pub name: String,
+}
+
+#[derive(Args)]
+pub struct WhArgs {
+    pub class: String,
+    #[arg(long, default_value = "all")]
+    pub wh_type: WhType,
+}
+
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+pub enum RouteFlag {
+    #[default]
+    Shortest,
+    Safest,
+    Secure,
+}
+
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+pub enum WhType {
+    #[default]
+    All,
+    Combat,
+    Relic,
+    Gas,
+}
+
+pub fn parse() -> Cli {
+    Cli::parse()
+}
