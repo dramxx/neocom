@@ -19,7 +19,8 @@ pub fn run(args: WhArgs) -> Result<()> {
     }
 }
 
-fn show_c1(_wh_type: &WhType) -> Result<()> {
+fn show_c1(wh_type: &WhType) -> Result<()> {
+    let _ = wh_type; // Currently unused but available for filtering
     println!("Class 1 Wormhole Sites");
     println!("{}", "=".repeat(50));
 
@@ -37,7 +38,8 @@ fn show_c1(_wh_type: &WhType) -> Result<()> {
     Ok(())
 }
 
-fn show_c2(_wh_type: &WhType) -> Result<()> {
+fn show_c2(wh_type: &WhType) -> Result<()> {
+    let _ = wh_type;
     println!("Class 2 Wormhole Sites");
     println!("{}", "=".repeat(50));
 
@@ -60,7 +62,8 @@ fn show_c2(_wh_type: &WhType) -> Result<()> {
     Ok(())
 }
 
-fn show_c3(_wh_type: &WhType) -> Result<()> {
+fn show_c3(wh_type: &WhType) -> Result<()> {
+    let _ = wh_type;
     println!("Class 3 Wormhole Sites");
     println!("{}", "=".repeat(50));
 
@@ -85,7 +88,8 @@ fn show_c3(_wh_type: &WhType) -> Result<()> {
     Ok(())
 }
 
-fn show_c4(_wh_type: &WhType) -> Result<()> {
+fn show_c4(wh_type: &WhType) -> Result<()> {
+    let _ = wh_type;
     println!("Class 4 Wormhole Sites");
     println!("{}", "=".repeat(50));
 
@@ -121,7 +125,8 @@ fn show_c5(_wh_type: &WhType) -> Result<()> {
     Ok(())
 }
 
-fn show_c6(_wh_type: &WhType) -> Result<()> {
+fn show_c6(wh_type: &WhType) -> Result<()> {
+    let _ = wh_type;
     println!("Class 6 Wormhole Sites");
     println!("{}", "=".repeat(50));
 

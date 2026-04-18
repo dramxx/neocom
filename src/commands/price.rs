@@ -102,7 +102,7 @@ fn run_file(
 
         let orders = esi
             .get_market_orders(resolved.id, region_id)
-            .unwrap_or_default();
+            .with_context(|| format!("Failed to fetch orders for {}", name))?;
 
         let mut best_sell = f64::MAX;
         let mut best_buy = f64::MIN;
@@ -138,9 +138,9 @@ fn run_file(
         Cell::new("").add_attribute(Attribute::Bold),
         Cell::new("").add_attribute(Attribute::Bold),
         Cell::new("").add_attribute(Attribute::Bold),
-        Cell::new(&isk_format(total_sell)).add_attribute(Attribute::Bold),
+        Cell::new(isk_format(total_sell)).add_attribute(Attribute::Bold),
         Cell::new("").add_attribute(Attribute::Bold),
-        Cell::new(&isk_format(total_buy)).add_attribute(Attribute::Bold),
+        Cell::new(isk_format(total_buy)).add_attribute(Attribute::Bold),
     ]);
 
     println!("{}", table);

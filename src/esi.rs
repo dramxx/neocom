@@ -104,6 +104,12 @@ impl EsiClient {
             .with_context(|| "Failed to parse system info")
     }
 
+    /// Get stargate IDs for a system (uses cached stargates from system info)
+    pub fn get_stargate_ids(&self, system_id: i64) -> Result<Vec<i64>> {
+        let info = self.get_system_info(system_id)?;
+        Ok(info.stargates.unwrap_or_default())
+    }
+
     pub fn get_market_orders(&self, type_id: i64, region_id: i64) -> Result<Vec<MarketOrder>> {
         let url = format!(
             "{}/markets/{}/orders/?type_id={}&order_type=all",
@@ -160,6 +166,7 @@ pub struct SystemInfo {
     pub security: f64,
     #[serde(rename = "region_id")]
     pub region: Option<i64>,
+    pub stargates: Option<Vec<i64>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -172,12 +179,6 @@ pub struct MarketOrder {
     pub volume: i64,
     #[serde(rename = "is_buy_order")]
     pub is_buy: bool,
-}
-
-#[derive(Debug, Deserialize)]
-#[allow(dead_code)]
-pub struct OrdersResponse {
-    items: Option<Vec<MarketOrder>>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -42,10 +42,22 @@ pub fn run(args: TravelArgs) -> Result<()> {
     println!();
 
     for hop in &route {
-        let kills = zkill
-            .get_system_kills(hop.system_id, args.hours)
-            .map(|k| k.kill_count.unwrap_or(0) as u32)
-            .unwrap_or(0);
+        // Get stargate IDs for this system from ESI
+        let gate_ids = esi.get_stargate_ids(hop.system_id).unwrap_or_default();
+        
+        // Get gate-specific kills - only count kills AT the gate (not neighbor gates)
+        // This matches eve-gatecheck behavior
+        let kills: u32 = if gate_ids.is_empty() {
+            0
+        } else {
+            match zkill.get_gate_kills(hop.system_id, &gate_ids, args.hours) {
+                Ok(gate_kills) => {
+                    // Count ALL kills at gates in this system (matches "at gates" in eve-gatecheck)
+                    gate_kills.iter().map(|g| g.kill_count as u32).sum()
+                },
+                Err(_) => 0
+            }
+        };
 
         if kills >= 5 {
             hot_count += 1;

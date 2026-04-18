@@ -27,7 +27,7 @@ pub enum Command {
     Status,
 }
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 pub struct TravelArgs {
     pub origin: String,
     pub destination: String,

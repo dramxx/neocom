@@ -13,19 +13,122 @@ impl ZkillClient {
         Self { agent }
     }
 
-    pub fn get_system_kills(&self, system_id: i64, _hours: u32) -> Result<SystemKills> {
-        let url = format!("{}/kills/solarSystemID/{}/", ZKILL_BASE, system_id);
+/// Get total kills in a system (all locations)
+    pub fn get_system_kills(&self, system_id: i64, hours: u32) -> Result<SystemKills> {
+        // Try with hours param first, but if that fails (403), fall back to no-time-limit
+        let url = format!("{}/kills/solarSystemID/{}/?hours={}", ZKILL_BASE, system_id, hours);
+        
+        let result = self.fetch_kills(&url);
+        if let Ok(kills) = result {
+            return Ok(kills);
+        }
+        
+        // Fallback: try without hours (all-time)
+        let fallback_url = format!("{}/kills/solarSystemID/{}/", ZKILL_BASE, system_id);
+        self.fetch_kills(&fallback_url)
+    }
+    
+    fn fetch_kills(&self, url: &str) -> Result<SystemKills> {
         let mut response = self
             .agent
-            .get(&url)
+            .get(url)
             .header("User-Agent", "neocom/0.1")
-            .header("Accept-Encoding", "gzip")
+            .header("Accept", "application/json")
             .call()
-            .with_context(|| "Failed to fetch system kills")?;
-        response
+            .with_context(|| format!("Failed to fetch: {}", url))?;
+        
+        let body: serde_json::Value = response.body_mut().read_json().context("Failed to read response")?;
+        
+        // Handle stats {killCount: N}
+        if let Ok(stats) = serde_json::from_value::<SystemKills>(body.clone()) {
+            return Ok(stats);
+        }
+        
+        // Handle killmail array
+        #[derive(serde::Deserialize)]
+        #[allow(dead_code)]
+        struct KM { #[serde(rename = "killmail_id")] id: i64 }
+        
+        let kills = serde_json::from_value::<Vec<KM>>(body)
+            .context("Failed to parse killmail array")?;
+        
+        Ok(SystemKills {
+            kill_count: Some(kills.len() as i64),
+        })
+    }
+
+    /// Get kills at specific locations (stargates) - filters killmails by locationID
+    pub fn get_gate_kills(&self, system_id: i64, gate_ids: &[i64], hours: u32) -> Result<Vec<GateKill>> {
+        // Try pastSeconds first (more reliable)
+        let past_seconds = hours * 3600;
+        let url = format!(
+            "{}/kills/solarSystemID/{}/pastSeconds/{}/",
+            ZKILL_BASE, system_id, past_seconds
+        );
+        
+        if let Ok(kills) = self.fetch_gate_kills(&url, gate_ids) {
+            return Ok(kills);
+        }
+        
+        // Try hours query param
+        let hours_url = format!(
+            "{}/kills/solarSystemID/{}/?hours={}",
+            ZKILL_BASE, system_id, hours
+        );
+        
+        if let Ok(kills) = self.fetch_gate_kills(&hours_url, gate_ids) {
+            return Ok(kills);
+        }
+        
+        // Fallback: try without time filter
+        let fallback_url = format!("{}/kills/solarSystemID/{}/", ZKILL_BASE, system_id);
+        self.fetch_gate_kills(&fallback_url, gate_ids)
+    }
+    
+    fn fetch_gate_kills(&self, url: &str, gate_ids: &[i64]) -> Result<Vec<GateKill>> {
+        let mut response = self
+            .agent
+            .get(url)
+            .header("User-Agent", "neocom/0.1")
+            .header("Accept", "application/json")
+            .call()
+            .with_context(|| format!("Failed to fetch: {}", url))?;
+
+        #[derive(Deserialize)]
+        struct Killmail {
+            #[serde(rename = "zkb")]
+            zkb: ZkbInfo,
+        }
+
+        #[derive(Deserialize)]
+        struct ZkbInfo {
+            #[serde(rename = "locationID")]
+            location_id: Option<i64>,
+        }
+
+        let kills: Vec<Killmail> = response
             .body_mut()
             .read_json()
-            .context("Failed to parse kills")
+            .context("Failed to parse killmails")?;
+
+        let mut location_ids: Vec<i64> = Vec::new();
+        for kill in &kills {
+            if let Some(id) = kill.zkb.location_id {
+                location_ids.push(id);
+            }
+        }
+
+        // Count kills per gate location
+        let mut gate_kills: Vec<GateKill> = Vec::new();
+        for &gate_id in gate_ids {
+            let count = location_ids.iter().filter(|&&id| id == gate_id).count() as i64;
+            gate_kills.push(GateKill {
+                gate_id,
+                kill_count: count,
+            });
+        }
+        
+        Ok(gate_kills)
     }
 
     pub fn get_character_info(&self, character_id: i64) -> Result<CharacterInfo> {
@@ -48,6 +151,13 @@ impl ZkillClient {
 pub struct SystemKills {
     #[serde(rename = "killCount")]
     pub kill_count: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub struct GateKill {
+    pub gate_id: i64,
+    pub kill_count: i64,
 }
 
 #[derive(Debug, Deserialize)]
