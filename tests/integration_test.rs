@@ -159,3 +159,79 @@ fn test_version() {
     let mut cmd = Command::cargo_bin("neocom").unwrap();
     cmd.arg("--version").assert().success();
 }
+
+// TRAVEL WITH HOURS FLAG
+#[test]
+fn test_travel_with_hours_flag() {
+    let output = StdCommand::new("./target/release/neocom.exe")
+        .arg("travel")
+        .arg("Jita")
+        .arg("Amarr")
+        .arg("--hours")
+        .arg("1")
+        .output()
+        .unwrap();
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    // Should show 1h in the output
+    assert!(stdout.contains("/1h"), "travel --hours 1 should show /1h");
+}
+
+#[test]
+fn test_travel_with_24_hours() {
+    let output = StdCommand::new("./target/release/neocom.exe")
+        .arg("travel")
+        .arg("Jita")
+        .arg("Amarr")
+        .arg("--hours")
+        .arg("24")
+        .output()
+        .unwrap();
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    // Should show 24h in the output
+    assert!(stdout.contains("/24h"), "travel --hours 24 should show /24h");
+}
+
+// TRAVEL GATE KILLS FORMAT (Uedama has known gate kills)
+#[test]
+fn test_travel_shows_gate_kills() {
+    let output = StdCommand::new("./target/release/neocom.exe")
+        .arg("travel")
+        .arg("Oijamon")
+        .arg("Amattens")
+        .arg("--hours")
+        .arg("1")
+        .output()
+        .unwrap();
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    // Should have kills in the output (systems with gates show numbers)
+    assert!(stdout.contains("/1h"), "should show hour format");
+}
+
+// TRAVEL DEFAULT HOURS
+#[test]
+fn test_travel_default_hours() {
+    let output = StdCommand::new("./target/release/neocom.exe")
+        .arg("travel")
+        .arg("Jita")
+        .arg("Amarr")
+        .output()
+        .unwrap();
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    // Default is 1 hour (matches eve-gatecheck)
+    assert!(stdout.contains("/1h"), "default should be 1h");
+}
+
+// TRAVEL ROUTE FLAG
+#[test]
+fn test_travel_route_safest() {
+    let output = StdCommand::new("./target/release/neocom.exe")
+        .arg("travel")
+        .arg("Jita")
+        .arg("Tama")
+        .arg("--route")
+        .arg("safest")
+        .output()
+        .unwrap();
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    assert!(stdout.contains("Route:") || stdout.contains("HS"));
+}

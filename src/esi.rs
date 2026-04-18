@@ -110,6 +110,43 @@ impl EsiClient {
         Ok(info.stargates.unwrap_or_default())
     }
 
+    /// Get detailed stargate info (including destination system)
+    pub fn get_stargate_info(&self, gate_id: i64) -> Result<StargateInfo> {
+        let url = format!("{}/universe/stargates/{}/", ESI_BASE, gate_id);
+        let mut response = self
+            .agent
+            .get(&url)
+            .header("User-Agent", "neocom/0.1")
+            .call()
+            .with_context(|| format!("Failed to fetch stargate {}", gate_id))?;
+        response
+            .body_mut()
+            .read_json()
+            .with_context(|| "Failed to parse stargate info")
+    }
+
+    /// Resolve a system ID to its name
+    pub fn resolve_system(&self, system_id: i64) -> Result<String> {
+        let url = format!("{}/universe/systems/{}/", ESI_BASE, system_id);
+        let mut response = self
+            .agent
+            .get(&url)
+            .header("User-Agent", "neocom/0.1")
+            .call()
+            .with_context(|| format!("Failed to fetch system {}", system_id))?;
+
+        #[derive(Deserialize)]
+        struct SystemDetails {
+            name: String,
+        }
+
+        let details: SystemDetails = response
+            .body_mut()
+            .read_json()
+            .with_context(|| "Failed to parse system details")?;
+        Ok(details.name)
+    }
+
     pub fn get_market_orders(&self, type_id: i64, region_id: i64) -> Result<Vec<MarketOrder>> {
         let url = format!(
             "{}/markets/{}/orders/?type_id={}&order_type=all",
@@ -186,4 +223,19 @@ pub struct ServerStatus {
     pub players: i64,
     #[serde(rename = "server_version")]
     pub version: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct StargateInfo {
+    pub name: String,
+    pub stargate_id: i64,
+    #[serde(rename = "destination")]
+    pub destination: Option<Destination>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct Destination {
+    pub system_id: i64,
 }

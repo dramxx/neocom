@@ -61,6 +61,7 @@ fn run_file(
     _buy_only: bool,
     _sell_only: bool,
 ) -> Result<()> {
+    let _ = (_buy_only, _sell_only); // Reserved for future filtering
     let content =
         std::fs::read_to_string(file_path).with_context(|| format!("Cannot read {}", file_path))?;
 
@@ -73,7 +74,14 @@ fn run_file(
         let parts: Vec<&str> = line.split('\t').collect();
         if parts.len() >= 2 {
             let name = parts[0].to_string();
-            let qty: u32 = parts[1].trim().parse().unwrap_or(1);
+            let qty_result = parts[1].trim().parse::<u32>();
+            let qty = match qty_result {
+                Ok(n) => n,
+                Err(_) => {
+                    eprintln!("Warning: invalid quantity '{}', using 1", parts[1]);
+                    1
+                }
+            };
             items.push((name, qty));
         }
     }

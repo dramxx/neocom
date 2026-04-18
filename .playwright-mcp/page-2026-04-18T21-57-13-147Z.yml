@@ -1,0 +1,109 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Log in with your EVE account":
+      - /url: https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=http%3A%2F%2Feve-gatecheck.space%2Feve%2Fsso_callback.php&client_id=e4001315fe104de79ef21ac3bf36fd1a&state=egcstate
+      - img "Log in with your EVE account" [ref=e4] [cursor=pointer]
+    - heading "EVE Gatecamp Check" [level=1] [ref=e5]
+    - generic [ref=e6]: Check before you jump!
+    - paragraph [ref=e7]:
+      - strong [ref=e8]: "Notice (25th March 2026):"
+      - text: SSO should be fixed again! Sorry for the inconvenience.
+  - generic [ref=e9]:
+    - paragraph [ref=e10]:
+      - text: Welcome,
+      - strong [ref=e11]: Guest
+      - text: "!"
+    - strong [ref=e12]: The 'basic' gatecamp checker will always be 100% free of charge.
+    - text: If, however, you want to gain even more of an advantage over your enemies, consider purchasing some
+    - strong [ref=e13]: Premium Credit
+    - text: .
+    - text: At only
+    - strong [ref=e14]: 25m ISK/month
+    - text: it is a
+    - strong [ref=e15]: ridiculously cheap
+    - text: way to gain a
+    - strong [ref=e16]: massive
+    - text: advantage over your enemies.
+    - link "Click here for more info about Premium Credit" [ref=e17] [cursor=pointer]:
+      - /url: javascript:void(0);
+      - text: Click here for more info about
+      - strong [ref=e18]: Premium Credit
+    - paragraph
+  - generic [ref=e19]:
+    - paragraph [ref=e20]:
+      - strong [ref=e21]: I will be traveling from
+      - textbox "Start" [ref=e23]: Jita
+      - strong [ref=e24]: to
+      - textbox "Waypoint" [ref=e26]: Amarr
+      - strong [ref=e27]: "Avoid these systems:"
+      - textbox "Avoid" [ref=e29]
+      - checkbox "Remember" [ref=e30]
+      - text: Remember
+      - strong [ref=e31]: "Prefer:"
+      - radio "Shortest" [checked] [ref=e32]
+      - text: Shortest
+      - radio "Secure" [ref=e33]
+      - text: Secure
+      - radio "Unsecure" [ref=e34]
+      - text: Unsecure
+      - button "Check!" [ref=e35] [cursor=pointer]
+    - generic [ref=e54]:
+      - strong [ref=e78]:
+        - text: Your route
+        - emphasis [ref=e79]: (shortest route - 0 jumps)
+        - text: ":"
+      - table [ref=e80]:
+        - rowgroup [ref=e81]:
+          - row "# Region System / Sec Total kills (1h) Info Links" [ref=e82]:
+            - columnheader "#" [ref=e83]
+            - columnheader "Region" [ref=e84]
+            - columnheader "System / Sec" [ref=e85]
+            - columnheader "Total kills (1h)" [ref=e86]
+            - columnheader "Info" [ref=e87]
+            - columnheader "Links" [ref=e88]
+        - rowgroup [ref=e89]:
+          - row "1 The Forge Jita 0.9 0 No kills at gates. zKillboard - Dotlan" [ref=e90]:
+            - cell "1" [ref=e91]
+            - cell "The Forge" [ref=e92]:
+              - link "The Forge" [ref=e93] [cursor=pointer]:
+                - /url: http://evemaps.dotlan.net/map/The_Forge/1:Jita:#kills
+            - cell "Jita 0.9" [ref=e94]:
+              - text: Jita
+              - generic [ref=e95]: "0.9"
+            - cell "0" [ref=e96]
+            - cell "No kills at gates." [ref=e97]
+            - cell "zKillboard - Dotlan" [ref=e98]:
+              - link "zKillboard" [ref=e99] [cursor=pointer]:
+                - /url: https://zkillboard.com/system/30000142/
+              - text: "-"
+              - link "Dotlan" [ref=e100] [cursor=pointer]:
+                - /url: http://evemaps.dotlan.net/system/Jita/
+    - generic [ref=e36]:
+      - strong [ref=e37]: "Legend:"
+      - generic [ref=e38]: 0 kills
+      - text: at gates in system in the past hour
+      - generic [ref=e39]: 2 kills or less
+      - text: at gates in system in the past hour
+      - generic [ref=e40]: 3 kills or more
+      - text: at gates in system in the past hour
+      - generic [ref=e41]: smartbomb kills
+      - text: at gates in system in the past hour
+      - generic [ref=e42]: hic/dictors used
+      - text: at gates in system in the past hour
+  - paragraph [ref=e44]:
+    - link [ref=e45] [cursor=pointer]:
+      - /url: https://www.eveonline.com/partners
+      - img [ref=e46]
+    - text: Created by Floris Saucus - All Eve Related Materials are Property Of
+    - link "CCP Games" [ref=e47] [cursor=pointer]:
+      - /url: http://www.ccpgames.com/
+    - text: NO REFUNDS.
+    - strong [ref=e48]: TRIPLE
+    - text: "-check character name is"
+    - strong [ref=e49]: EVE-Gatecheck Payments
+    - text: before sending ISK.
+    - link "ARMIL" [ref=e50] [cursor=pointer]:
+      - /url: https://zkillboard.com/corporation/98263423/
+      - strong [ref=e51]: ARMIL
+    - text: is NOT recruiting
+    - text: "Current EVE time: 21:55:55"

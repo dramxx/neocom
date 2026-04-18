@@ -31,13 +31,13 @@ pub enum Command {
 pub struct TravelArgs {
     pub origin: String,
     pub destination: String,
-    #[arg(long, default_value = "24")]
+    #[arg(long, default_value = "1")]
     pub hours: u32,
     #[arg(long, default_value = "shortest")]
     pub route: RouteFlag,
 }
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 pub struct PriceArgs {
     pub item: Option<String>,
     pub quantity: Option<u32>,
