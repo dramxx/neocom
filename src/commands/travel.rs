@@ -8,8 +8,9 @@ pub fn run(args: TravelArgs) -> Result<()> {
 
     let route_flag = match args.route {
         crate::cli::RouteFlag::Shortest => "shortest",
-        crate::cli::RouteFlag::Safest => "safest",
+        crate::cli::RouteFlag::Safest => "secure",
         crate::cli::RouteFlag::Secure => "secure",
+        crate::cli::RouteFlag::Insecure => "insecure",
     };
 
     let route = esi
@@ -22,7 +23,7 @@ pub fn run(args: TravelArgs) -> Result<()> {
         "Route: {} -> {}  ({} jumps)",
         args.origin,
         args.destination,
-        route.len()
+        route.len() - 1
     );
     println!(
         "Security: {}",

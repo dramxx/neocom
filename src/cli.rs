@@ -72,10 +72,15 @@ pub struct WhArgs {
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 pub enum RouteFlag {
+    /// Shortest route (default)
     #[default]
     Shortest,
+    /// Prefer high-sec systems
     Safest,
+    /// Only high-sec systems
     Secure,
+    /// Prefer low-sec systems
+    Insecure,
 }
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]

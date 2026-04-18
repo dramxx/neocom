@@ -57,11 +57,11 @@ impl EsiClient {
         let origin_id = self
             .resolve_names(&[origin])?
             .pop()
-            .with_context(|| "Unknown origin")?;
+            .with_context(|| format!("Unknown origin: {}", origin))?;
         let dest_id = self
             .resolve_names(&[destination])?
             .pop()
-            .with_context(|| "Unknown destination")?;
+            .with_context(|| format!("Unknown destination: {}", destination))?;
 
         let url = format!(
             "{}/route/{}/{}/?flag={}",
