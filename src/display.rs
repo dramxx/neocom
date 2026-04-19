@@ -1,12 +1,16 @@
 pub fn danger_label(kills: u32) -> &'static str {
     if kills == 0 {
         "clear"
-    } else if kills <= 4 {
+    } else if kills <= 2 {
+        "low"
+    } else if kills <= 5 {
         "moderate"
-    } else if kills >= 16 {
-        "very dangerous"
-    } else {
+    } else if kills <= 10 {
+        "elevated"
+    } else if kills <= 20 {
         "dangerous"
+    } else {
+        "very dangerous"
     }
 }
 

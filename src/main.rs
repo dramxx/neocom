@@ -2,9 +2,12 @@ mod cli;
 mod commands;
 mod display;
 mod esi;
+mod systems;
 mod zkill;
 
 use anyhow::Result;
+use clap::CommandFactory;
+use clap_complete::Shell;
 
 fn main() {
     if let Err(e) = run() {
@@ -22,5 +25,22 @@ fn run() -> Result<()> {
         cli::Command::System(cmd) => commands::system::run(cmd),
         cli::Command::Wh(cmd) => commands::wh::run(cmd),
         cli::Command::Status => commands::status::run(),
+        cli::Command::Generate(cmd) => {
+            use clap_complete::generate;
+            let shell = match cmd.shell.as_str() {
+                "bash" => Shell::Bash,
+                "zsh" => Shell::Zsh,
+                "fish" => Shell::Fish,
+                "powershell" => Shell::PowerShell,
+                "elvish" => Shell::Elvish,
+                _ => anyhow::bail!(
+                    "Unsupported shell: {}. Use bash, zsh, fish, powershell, or elvish",
+                    cmd.shell
+                ),
+            };
+            let mut cmd = cli::Cli::command();
+            generate(shell, &mut cmd, "neocom", &mut std::io::stdout());
+            return Ok(());
+        }
     }
 }

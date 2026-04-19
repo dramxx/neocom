@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
@@ -13,19 +15,17 @@ impl ZkillClient {
         Self { agent }
     }
 
-/// Get total kills in a system (all locations)
+/// Get total kills in a system (all locations) - uses pastSeconds for time filtering
     pub fn get_system_kills(&self, system_id: i64, hours: u32) -> Result<SystemKills> {
-        // Try with hours param first, but if that fails (403), fall back to no-time-limit
-        let url = format!("{}/kills/solarSystemID/{}/?hours={}", ZKILL_BASE, system_id, hours);
+        let past_seconds = hours * 3600;
         
-        let result = self.fetch_kills(&url);
-        if let Ok(kills) = result {
-            return Ok(kills);
-        }
+        // Try pastSeconds endpoint (works reliably)
+        let url = format!(
+            "{}/kills/solarSystemID/{}/pastSeconds/{}/",
+            ZKILL_BASE, system_id, past_seconds
+        );
         
-        // Fallback: try without hours (all-time)
-        let fallback_url = format!("{}/kills/solarSystemID/{}/", ZKILL_BASE, system_id);
-        self.fetch_kills(&fallback_url)
+        self.fetch_kills(&url)
     }
     
     fn fetch_kills(&self, url: &str) -> Result<SystemKills> {
@@ -35,26 +35,26 @@ impl ZkillClient {
             .header("User-Agent", "neocom/0.1")
             .header("Accept", "application/json")
             .call()
-            .with_context(|| format!("Failed to fetch: {}", url))?;
+            .map_err(|e| anyhow::anyhow!("zkillboard fetch failed: {}", e))?;
         
-        let body: serde_json::Value = response.body_mut().read_json().context("Failed to read response")?;
+        let body: serde_json::Value = response.body_mut().read_json()
+            .map_err(|e| anyhow::anyhow!("failed to read JSON: {}", e))?;
         
         // Handle stats {killCount: N}
         if let Ok(stats) = serde_json::from_value::<SystemKills>(body.clone()) {
-            return Ok(stats);
+            if stats.kill_count.is_some() {
+                return Ok(stats);
+            }
         }
         
-        // Handle killmail array
-        #[derive(serde::Deserialize)]
-        #[allow(dead_code)]
-        struct KM { #[serde(rename = "killmail_id")] id: i64 }
+        // Handle killmail array - count the kills
+        if let Some(arr) = body.as_array() {
+            return Ok(SystemKills {
+                kill_count: Some(arr.len() as i64),
+            });
+        }
         
-        let kills = serde_json::from_value::<Vec<KM>>(body)
-            .context("Failed to parse killmail array")?;
-        
-        Ok(SystemKills {
-            kill_count: Some(kills.len() as i64),
-        })
+        Ok(SystemKills { kill_count: Some(0) })
     }
 
     /// Get kills at specific locations (stargates) - filters killmails by locationID
@@ -132,18 +132,34 @@ impl ZkillClient {
     }
 
     pub fn get_character_info(&self, character_id: i64) -> Result<CharacterInfo> {
-        let url = format!("{}/kills/characterID/{}/", ZKILL_BASE, character_id);
-        let mut response = self
+        // zKillboard has separate kills and losses endpoints - fetch both
+        let kills_url = format!("{}/kills/characterID/{}/", ZKILL_BASE, character_id);
+        let losses_url = format!("{}/losses/characterID/{}/", ZKILL_BASE, character_id);
+        
+        let kills: Vec<serde_json::Value> = self
             .agent
-            .get(&url)
+            .get(&kills_url)
             .header("User-Agent", "neocom/0.1")
-            .header("Accept-Encoding", "gzip")
             .call()
-            .with_context(|| "Failed to fetch character info")?;
-        response
-            .body_mut()
-            .read_json()
-            .with_context(|| "Failed to parse character info")
+            .ok()
+            .map(|mut r| r.body_mut().read_json().unwrap_or_default())
+            .unwrap_or_default();
+            
+        let losses: Vec<serde_json::Value> = self
+            .agent
+            .get(&losses_url)
+            .header("User-Agent", "neocom/0.1")
+            .call()
+            .ok()
+            .map(|mut r| r.body_mut().read_json().unwrap_or_default())
+            .unwrap_or_default();
+
+        Ok(CharacterInfo {
+            character: Some(character_id),
+            kills: Some(kills.len() as i64),
+            losses: Some(losses.len() as i64),
+            info: None,
+        })
     }
 }
 

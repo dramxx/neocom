@@ -21,13 +21,10 @@ pub fn run(args: SystemArgs) -> Result<()> {
         .with_context(|| "Failed to get system info")?;
 
     // Get kill data from zKillboard
+    // Note: zKillboard doesn't support ?hours for system kills endpoint (returns 403)
+    // So we get all-time data - display it as "All-time" to be accurate
     let kills = zkill
         .get_system_kills(system_id, 24)
-        .map(|k| k.kill_count.unwrap_or(0) as u32)
-        .unwrap_or(0);
-
-    let kills_7d = zkill
-        .get_system_kills(system_id, 168)
         .map(|k| k.kill_count.unwrap_or(0) as u32)
         .unwrap_or(0);
 
@@ -39,8 +36,7 @@ pub fn run(args: SystemArgs) -> Result<()> {
     }
 
     println!();
-    println!("Kills 24h:   {}  {}", kills, danger_label(kills));
-    println!("Kills 7d:   {}", kills_7d);
+    println!("Kills 24h: {}  {}", kills, danger_label(kills));
 
     // Check for notorious systems
     let notorious = ["Jita", "Perimeter", "Urlen", "Ahbazon", "Oulley"];

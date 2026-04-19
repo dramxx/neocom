@@ -25,6 +25,16 @@ pub enum Command {
     Wh(WhArgs),
     /// EVE server status
     Status,
+    /// Generate shell completion scripts
+    #[clap(hide = true)]
+    Generate(GenerateArgs),
+}
+
+/// Generate shell completion scripts
+#[derive(Args)]
+pub struct GenerateArgs {
+    /// Shell type: bash, zsh, fish, powershell, elvish
+    pub shell: String,
 }
 
 #[derive(Args, Clone)]
@@ -54,8 +64,6 @@ pub struct PriceArgs {
 #[derive(Args)]
 pub struct IntelArgs {
     pub pilot: String,
-    #[arg(long, default_value = "30")]
-    pub days: u32,
 }
 
 #[derive(Args)]

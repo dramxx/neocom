@@ -48,8 +48,8 @@ pub fn run(args: IntelArgs) -> Result<()> {
     }
 
     println!();
-    println!("Last {}d kills:   {}", args.days, kills);
-    println!("Last {}d losses:   {}", args.days, losses);
+    println!("All-time kills:    {}", kills);
+    println!("All-time losses:  {}", losses);
     println!("K/D ratio:        {:.1}", kd);
     println!();
     println!(
