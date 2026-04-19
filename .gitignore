@@ -21,3 +21,6 @@ Thumbs.db
 
 # Debug
 *.pdb
+
+# Playwright MCP
+.playwright-mcp/

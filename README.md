@@ -2,6 +2,8 @@
 
 EVE Online CLI toolkit for capsuleers. Market prices, route safety, pilot intel, and more.
 
+![alt text](image.png)
+
 ## Installation
 
 ```bash
