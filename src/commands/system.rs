@@ -23,13 +23,13 @@ pub fn run(args: SystemArgs) -> Result<()> {
     // Get kill data from zKillboard
     // Note: zKillboard doesn't support ?hours for system kills endpoint (returns 403)
     // So we get all-time data - display it as "All-time" to be accurate
-    let kills = zkill
-        .get_system_kills(system_id, 24)
-        .map(|k| k.kill_count.unwrap_or(0) as u32)
-        .unwrap_or(0);
+    let kills = match zkill.get_system_kills(system_id, 24) {
+        Ok(k) => k.kill_count.unwrap_or(0) as u32,
+        Err(_) => 0,
+    };
 
     println!("System:    {}", system_name);
-    println!("Security:  {:.1}", sys_info.security);
+    println!("Security:  {:.2}", sys_info.security);
 
     if let Some(region) = sys_info.region {
         println!("Region ID: {}", region);

@@ -132,32 +132,34 @@ impl ZkillClient {
     }
 
     pub fn get_character_info(&self, character_id: i64) -> Result<CharacterInfo> {
-        // zKillboard has separate kills and losses endpoints - fetch both
-        let kills_url = format!("{}/kills/characterID/{}/", ZKILL_BASE, character_id);
-        let losses_url = format!("{}/losses/characterID/{}/", ZKILL_BASE, character_id);
-        
-        let kills: Vec<serde_json::Value> = self
+        // Use stats endpoint for aggregated data
+        let stats_url = format!("{}/stats/characterID/{}/", ZKILL_BASE, character_id);
+
+        let mut response = self
             .agent
-            .get(&kills_url)
+            .get(&stats_url)
             .header("User-Agent", "neocom/0.1")
+            .header("Accept", "application/json")
             .call()
-            .ok()
-            .map(|mut r| r.body_mut().read_json().unwrap_or_default())
-            .unwrap_or_default();
-            
-        let losses: Vec<serde_json::Value> = self
-            .agent
-            .get(&losses_url)
-            .header("User-Agent", "neocom/0.1")
-            .call()
-            .ok()
-            .map(|mut r| r.body_mut().read_json().unwrap_or_default())
-            .unwrap_or_default();
+            .with_context(|| "Failed to fetch character stats from zKillboard")?;
+
+        #[derive(Deserialize)]
+        struct StatsResponse {
+            #[serde(rename = "shipsDestroyed")]
+            kills: Option<i64>,
+            #[serde(rename = "shipsLost")]
+            losses: Option<i64>,
+        }
+
+        let stats: StatsResponse = response
+            .body_mut()
+            .read_json()
+            .with_context(|| "Failed to parse character stats")?;
 
         Ok(CharacterInfo {
             character: Some(character_id),
-            kills: Some(kills.len() as i64),
-            losses: Some(losses.len() as i64),
+            kills: stats.kills,
+            losses: stats.losses,
             info: None,
         })
     }
@@ -185,8 +187,68 @@ pub struct CharacterInfo {
     pub info: Option<CharacterDetails>,
 }
 
+pub fn fetch_character_details(esi: &crate::esi::EsiClient, character_id: i64) -> anyhow::Result<CharacterDetails> {
+    // ESI characters endpoint for public info
+    let url = format!("{}/characters/{}/", crate::esi::ESI_BASE, character_id);
+
+    let mut response = ureq::Agent::new_with_defaults()
+        .get(&url)
+        .header("User-Agent", "neocom/0.1")
+        .call()
+        .with_context(|| format!("Failed to fetch character {} details", character_id))?;
+
+    #[derive(Deserialize)]
+    struct CharacterResponse {
+        name: String,
+        corporation_id: i64,
+        alliance_id: Option<i64>,
+        security_status: Option<f64>,
+    }
+
+    let char: CharacterResponse = response
+        .body_mut()
+        .read_json()
+        .with_context(|| "Failed to parse character details")?;
+
+    // Fetch corporation name
+    let corp_url = format!("{}/corporations/{}/", crate::esi::ESI_BASE, char.corporation_id);
+    let corp_name = ureq::Agent::new_with_defaults()
+        .get(&corp_url)
+        .header("User-Agent", "neocom/0.1")
+        .call()
+        .ok()
+        .and_then(|mut r| {
+            #[derive(Deserialize)]
+            struct CorpResponse { name: String }
+            r.body_mut().read_json::<CorpResponse>().ok().map(|c| c.name)
+        });
+
+    // Fetch alliance name if present
+    let alliance_name = char.alliance_id.and_then(|id| {
+        let url = format!("{}/alliances/{}/", crate::esi::ESI_BASE, id);
+        ureq::Agent::new_with_defaults()
+            .get(&url)
+            .header("User-Agent", "neocom/0.1")
+            .call()
+            .ok()
+            .and_then(|mut r| {
+                #[derive(Deserialize)]
+                struct AllianceResponse { name: String }
+                r.body_mut().read_json::<AllianceResponse>().ok().map(|a| a.name)
+            })
+    });
+
+    Ok(CharacterDetails {
+        name: Some(char.name),
+        corp_id: Some(char.corporation_id),
+        corp_name,
+        alliance_id: char.alliance_id,
+        alliance_name,
+        sec_status: char.security_status,
+    })
+}
+
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 pub struct CharacterDetails {
     pub name: Option<String>,
     pub corp_id: Option<i64>,

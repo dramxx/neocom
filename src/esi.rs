@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
-const ESI_BASE: &str = "https://esi.evetech.net/latest";
+pub const ESI_BASE: &str = "https://esi.evetech.net/latest";
 
 pub struct EsiClient {
     agent: ureq::Agent,

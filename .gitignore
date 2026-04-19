@@ -24,3 +24,6 @@ Thumbs.db
 
 # Playwright MCP
 .playwright-mcp/
+
+# Sisyphus
+.sisyphus/

@@ -128,30 +128,55 @@ impl SystemCache {
 }
 
 fn fetch_system_details(system_ids: &[i64]) -> Result<Vec<SystemEntry>> {
-    let mut handles = Vec::new();
+    use std::sync::mpsc;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
-    for &id in system_ids {
-        let handle = std::thread::spawn(move || {
-            let client = ureq::Agent::new_with_defaults();
-            let url = format!("{}/universe/systems/{}/", ESI_BASE, id);
-            let response = client
-                .get(&url)
-                .header("User-Agent", "neocom/0.1")
-                .call()
-                .ok()
-                .and_then(|mut r| r.body_mut().read_json::<SystemDetails>().ok());
+    const MAX_CONCURRENT: usize = 50;
 
-            response.map(|details| SystemEntry {
-                id,
-                name: details.name,
-            })
-        });
-        handles.push(handle);
+    let client = Arc::new(ureq::Agent::new_with_defaults());
+    let (tx, rx) = mpsc::channel();
+    let active = Arc::new(AtomicUsize::new(0));
+    let mut results = Vec::new();
+
+    for chunk in system_ids.chunks(MAX_CONCURRENT) {
+        let mut handles = Vec::new();
+
+        for &id in chunk {
+            let tx = tx.clone();
+            let client = Arc::clone(&client);
+            let active = Arc::clone(&active);
+
+            let handle = std::thread::spawn(move || {
+                active.fetch_add(1, Ordering::SeqCst);
+
+                let url = format!("{}/universe/systems/{}/", ESI_BASE, id);
+                let result = client
+                    .get(&url)
+                    .header("User-Agent", "neocom/0.1")
+                    .call()
+                    .ok()
+                    .and_then(|mut r| r.body_mut().read_json::<SystemDetails>().ok())
+                    .map(|details| SystemEntry {
+                        id,
+                        name: details.name,
+                    });
+
+                let _ = tx.send(result);
+                active.fetch_sub(1, Ordering::SeqCst);
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            let _ = handle.join();
+        }
     }
 
-    let mut results = Vec::new();
-    for handle in handles {
-        if let Ok(Some(entry)) = handle.join() {
+    drop(tx);
+
+    while let Ok(result) = rx.try_recv() {
+        if let Some(entry) = result {
             results.push(entry);
         }
     }

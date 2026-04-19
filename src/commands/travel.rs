@@ -119,7 +119,7 @@ pub fn run(args: TravelArgs) -> Result<()> {
 
         if detail.is_empty() {
             println!(
-                "{:<12} [{:.1}]  {:<10}  {}/{}h  {}",
+                "{:<12} [{:.2}]  {:<10}  {}/{}h  {}",
                 hop.name,
                 hop.security,
                 bar,
@@ -129,7 +129,7 @@ pub fn run(args: TravelArgs) -> Result<()> {
             );
         } else {
             println!(
-                "{:<12} [{:.1}]  {:<10}  {}/{}h  {}  {}",
+                "{:<12} [{:.2}]  {:<10}  {}/{}h  {}  {}",
                 hop.name,
                 hop.security,
                 bar,

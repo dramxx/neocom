@@ -17,7 +17,8 @@ pub fn run(args: IntelArgs) -> Result<()> {
         .get_character_info(char_id)
         .with_context(|| "No data for pilot")?;
 
-    let details = info.info.as_ref();
+    // Fetch corp/alliance details from ESI
+    let details = crate::zkill::fetch_character_details(&esi, char_id).ok();
     let kills = info.kills.unwrap_or(0);
     let losses = info.losses.unwrap_or(0);
 
